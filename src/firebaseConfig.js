@@ -3,28 +3,19 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
-// Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCtcM0llScwdxsa-qu1NoLWur1W57uz76I",
-  authDomain: "campus-lost-and-found-app.firebaseapp.com",
-  projectId: "campus-lost-and-found-app",
-  storageBucket: "campus-lost-and-found-app.appspot.com",
-  messagingSenderId: "915421102877",
-  appId: "1:915421102877:web:82e3f2a3678d67760817f4",
-  measurementId: "G-493DSFHDD4"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Firestore
 export const db = getFirestore(app);
-
-// Storage
 export const storage = getStorage(app);
-
-// Auth
 export const auth = getAuth(app);
-
-// Google Auth Provider
 export const googleProvider = new GoogleAuthProvider();
