@@ -1,0 +1,31 @@
+/* Use Tailwind's base styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Make the root and body take up the full height of the screen */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Main container for our app */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Wrapper for the map to make it fill remaining space */
+.map-wrapper {
+  flex-grow: 1; /* This is the key part that makes the map fill the space */
+  width: 100%;
+}
+
+/* Ensure the Leaflet map container itself fills its wrapper */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+}
