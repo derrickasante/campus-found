@@ -22,7 +22,7 @@ import {
 } from "firebase/auth";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// ----- Leaflet default marker fix -----
+
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
@@ -30,7 +30,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// ---------- Email Auth Panel ----------
+// Email Auth Panel 
 function EmailAuthPanel({ onClose }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -94,7 +94,7 @@ function EmailAuthPanel({ onClose }) {
   );
 }
 
-// ---------- Floating Toolbar ----------
+
 function FloatingToolbar({ user, signInWithGoogle, signOutUser, setShowEmailAuth, setSearchResult }) {
   const [q, setQ] = useState("");
   const map = useMap();
@@ -195,7 +195,7 @@ function MapClickHandler({ onMapClick }) {
   return null;
 }
 
-// ---------- Report Panel ----------
+// Report Panel
 function ReportPanel({
   isOpen,
   onClose,
@@ -250,7 +250,7 @@ function ReportPanel({
   );
 }
 
-// ---------- Main App ----------
+// Main App
 export default function App() {
   const campusCenter = [44.5649, -69.6625];
 
@@ -282,7 +282,7 @@ export default function App() {
           description: data.description,
           location: data.location,
           timestamp: data.timestamp,
-          updatedAt: data.updatedAt || null, // <- new field used for cache-busting
+          updatedAt: data.updatedAt || null, 
           imageUrl: data.imageUrl || null,
           userId: data.userId || null,
           userDisplayName: data.userDisplayName || null,
@@ -343,7 +343,7 @@ export default function App() {
     try {
       let imageUrl = editingItem ? editingItem.imageUrl : null;
 
-      // If a new file is selected, upload and get a new URL
+      
       if (imageFile) {
         console.log("Uploading:", imageFile?.name, imageFile?.type, imageFile?.size);
         const sRef = storageRef(storage, `lostItems/${Date.now()}_${imageFile.name}`);
@@ -363,14 +363,14 @@ export default function App() {
           ...(newItemPosition && {
             location: { latitude: newItemPosition.lat, longitude: newItemPosition.lng },
           }),
-          updatedAt: serverTimestamp(), // <- for cache-busting
+          updatedAt: serverTimestamp(), 
         });
       } else {
         await addDoc(collection(db, "lostItems"), {
           description,
           location: { latitude: position.lat, longitude: position.lng },
           timestamp: serverTimestamp(),
-          updatedAt: serverTimestamp(), // <- for cache-busting
+          updatedAt: serverTimestamp(), 
           imageUrl: imageUrl || null,
           userId: user.uid,
           userDisplayName: user.displayName || user.email || null,
@@ -401,12 +401,11 @@ export default function App() {
 
     setEditingItem(item);
     setDescription(item.description || "");
-    setImageFile(null); // clear previous file selection
+    setImageFile(null); 
     setNewItemPosition({ lat: item.location.latitude, lng: item.location.longitude });
     setIsPanelOpen(true);
   };
 
-  // Helper to build a cache-busted URL for images
   const bust = (url, item) => {
     const v =
       (item?.updatedAt && item.updatedAt.seconds) ||
@@ -442,7 +441,7 @@ export default function App() {
                 </div>
                 {it.imageUrl && (
                   <img
-                    src={bust(it.imageUrl, it)} // <- cache-busted URL so new images show
+                    src={bust(it.imageUrl, it)} 
                     alt="reported"
                     style={{
                       marginTop: 8,
