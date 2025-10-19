@@ -22,18 +22,15 @@ import {
 } from "firebase/auth";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Fix Leaflet icons
+// ----- Leaflet default marker fix -----
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// --- Email Auth Panel ---
+// ---------- Email Auth Panel ----------
 function EmailAuthPanel({ onClose }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -97,7 +94,7 @@ function EmailAuthPanel({ onClose }) {
   );
 }
 
-
+// ---------- Floating Toolbar ----------
 function FloatingToolbar({ user, signInWithGoogle, signOutUser, setShowEmailAuth, setSearchResult }) {
   const [q, setQ] = useState("");
   const map = useMap();
@@ -147,13 +144,19 @@ function FloatingToolbar({ user, signInWithGoogle, signOutUser, setShowEmailAuth
 
       {!user ? (
         <>
-          <button onClick={signInWithGoogle} className="bg-red-500 text-white px-3 py-1 rounded-md">Google Sign In</button>
-          <button onClick={() => setShowEmailAuth((s) => !s)} className="bg-blue-500 text-white px-3 py-1 rounded-md">Email Sign In</button>
+          <button onClick={signInWithGoogle} className="bg-red-500 text-white px-3 py-1 rounded-md">
+            Google Sign In
+          </button>
+          <button onClick={() => setShowEmailAuth((s) => !s)} className="bg-blue-500 text-white px-3 py-1 rounded-md">
+            Email Sign In
+          </button>
         </>
       ) : (
         <>
           <span>Hi, {user.displayName || user.email}</span>
-          <button onClick={signOutUser} className="bg-gray-500 text-white px-3 py-1 rounded-md">Sign Out</button>
+          <button onClick={signOutUser} className="bg-gray-500 text-white px-3 py-1 rounded-md">
+            Sign Out
+          </button>
         </>
       )}
 
@@ -183,7 +186,6 @@ function FloatingToolbar({ user, signInWithGoogle, signOutUser, setShowEmailAuth
   );
 }
 
-
 function MapClickHandler({ onMapClick }) {
   useMapEvents({
     click(e) {
@@ -193,8 +195,17 @@ function MapClickHandler({ onMapClick }) {
   return null;
 }
 
-// --- Report Panel ---
-function ReportPanel({ isOpen, onClose, onSubmit, description, setDescription, imageFile, setImageFile, isEditing }) {
+// ---------- Report Panel ----------
+function ReportPanel({
+  isOpen,
+  onClose,
+  onSubmit,
+  description,
+  setDescription,
+  imageFile,
+  setImageFile,
+  isEditing,
+}) {
   if (!isOpen) return null;
   return (
     <div
@@ -227,7 +238,7 @@ function ReportPanel({ isOpen, onClose, onSubmit, description, setDescription, i
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setImageFile(e.target.files[0])}
+          onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
           style={{ marginBottom: 8 }}
         />
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -239,7 +250,7 @@ function ReportPanel({ isOpen, onClose, onSubmit, description, setDescription, i
   );
 }
 
-// Main App 
+// ---------- Main App ----------
 export default function App() {
   const campusCenter = [44.5649, -69.6625];
 
@@ -271,6 +282,7 @@ export default function App() {
           description: data.description,
           location: data.location,
           timestamp: data.timestamp,
+          updatedAt: data.updatedAt || null, // <- new field used for cache-busting
           imageUrl: data.imageUrl || null,
           userId: data.userId || null,
           userDisplayName: data.userDisplayName || null,
@@ -331,10 +343,15 @@ export default function App() {
     try {
       let imageUrl = editingItem ? editingItem.imageUrl : null;
 
+      // If a new file is selected, upload and get a new URL
       if (imageFile) {
+        console.log("Uploading:", imageFile?.name, imageFile?.type, imageFile?.size);
         const sRef = storageRef(storage, `lostItems/${Date.now()}_${imageFile.name}`);
         await uploadBytes(sRef, imageFile);
         imageUrl = await getDownloadURL(sRef);
+        console.log("New image URL:", imageUrl);
+      } else {
+        console.log("No new image selected; keeping:", imageUrl);
       }
 
       if (editingItem) {
@@ -342,12 +359,18 @@ export default function App() {
         await updateDoc(docRef, {
           description,
           imageUrl: imageUrl || null,
+          // If the pin was moved while editing, also update location
+          ...(newItemPosition && {
+            location: { latitude: newItemPosition.lat, longitude: newItemPosition.lng },
+          }),
+          updatedAt: serverTimestamp(), // <- for cache-busting
         });
       } else {
         await addDoc(collection(db, "lostItems"), {
           description,
           location: { latitude: position.lat, longitude: position.lng },
           timestamp: serverTimestamp(),
+          updatedAt: serverTimestamp(), // <- for cache-busting
           imageUrl: imageUrl || null,
           userId: user.uid,
           userDisplayName: user.displayName || user.email || null,
@@ -366,15 +389,30 @@ export default function App() {
   };
 
   const startEdit = (item) => {
-    if (item.userId && user && item.userId !== user.uid) {
+    // Require sign-in and ownership to edit
+    if (!user) {
+      alert("Sign in to edit reports.");
+      return;
+    }
+    if (item.userId && item.userId !== user.uid) {
       alert("You can only edit your own reports.");
       return;
     }
+
     setEditingItem(item);
     setDescription(item.description || "");
-    setImageFile(null);
+    setImageFile(null); // clear previous file selection
     setNewItemPosition({ lat: item.location.latitude, lng: item.location.longitude });
     setIsPanelOpen(true);
+  };
+
+  // Helper to build a cache-busted URL for images
+  const bust = (url, item) => {
+    const v =
+      (item?.updatedAt && item.updatedAt.seconds) ||
+      (item?.timestamp && item.timestamp.seconds) ||
+      Date.now();
+    return `${url}${url.includes("?") ? "&" : "?"}v=${v}`;
   };
 
   return (
@@ -404,9 +442,15 @@ export default function App() {
                 </div>
                 {it.imageUrl && (
                   <img
-                    src={it.imageUrl}
+                    src={bust(it.imageUrl, it)} // <- cache-busted URL so new images show
                     alt="reported"
-                    style={{ marginTop: 8, maxWidth: 140, maxHeight: 120, objectFit: "cover", borderRadius: 6 }}
+                    style={{
+                      marginTop: 8,
+                      maxWidth: 140,
+                      maxHeight: 120,
+                      objectFit: "cover",
+                      borderRadius: 6,
+                    }}
                   />
                 )}
                 <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
