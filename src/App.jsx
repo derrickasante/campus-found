@@ -97,7 +97,7 @@ function EmailAuthPanel({ onClose }) {
   );
 }
 
-// --- Floating Toolbar ---
+
 function FloatingToolbar({ user, signInWithGoogle, signOutUser, setShowEmailAuth, setSearchResult }) {
   const [q, setQ] = useState("");
   const map = useMap();
@@ -183,7 +183,7 @@ function FloatingToolbar({ user, signInWithGoogle, signOutUser, setShowEmailAuth
   );
 }
 
-// --- Map Click Handler ---
+
 function MapClickHandler({ onMapClick }) {
   useMapEvents({
     click(e) {
@@ -239,7 +239,7 @@ function ReportPanel({ isOpen, onClose, onSubmit, description, setDescription, i
   );
 }
 
-// --- Main App ---
+// Main App 
 export default function App() {
   const campusCenter = [44.5649, -69.6625];
 
