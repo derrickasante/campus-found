@@ -346,7 +346,7 @@ export default function App() {
       
       if (imageFile) {
         console.log("Uploading:", imageFile?.name, imageFile?.type, imageFile?.size);
-        const sRef = storageRef(storage, `lostItems/${Date.now()}_${imageFile.name}`);
+        const sRef = storageRef(storage, `lostItems/${user.uid}/${Date.now()}_${imageFile.name}`);
         await uploadBytes(sRef, imageFile);
         imageUrl = await getDownloadURL(sRef);
         console.log("New image URL:", imageUrl);
